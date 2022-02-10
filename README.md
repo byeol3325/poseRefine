@@ -1,3 +1,6 @@
+### Data Prepartaion
+use makeDataform.py and kitti dataset to prepare dataset
+```
 # data preparation
 |dataset/
   |kitti/
@@ -11,10 +14,11 @@
       |depth/
       |poses/
       |rgb/
+```
 
-# train
+### train
 
-# eval
+### eval
 
 # poseRefine
 # poseRefine
