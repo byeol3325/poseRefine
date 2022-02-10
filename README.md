@@ -1,27 +1,20 @@
-#######################################################
-###                    DATASET                      ###
-#######################################################
-/dataset
-  /kitti
-    /train
-      /calibration
-      /depth
-      /poses
-      /rgb
-    /test
-      /calibration
-      /depth
-      /poses
-      /rgb
+# data preparation
+|dataset/
+  |kitti/
+    |train/
+      |calibration/
+      |depth/
+      |poses/
+      |rgb/
+    |test/
+      |calibration/
+      |depth/
+      |poses/
+      |rgb/
 
-#######################################################
-###                    TRAIN                        ###
-#######################################################
+# train
 
-
-#######################################################
-###                  TEST(EVAL)                     ###
-#######################################################
+# eval
 
 # poseRefine
 # poseRefine
