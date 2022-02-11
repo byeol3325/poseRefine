@@ -3,34 +3,72 @@ import os
 import torch
 import numpy as np
 import cv2
+import math
 
 from torch.utils import data
 
 import random
 
-def genImage(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
-    ori_path_rgb = ori_path + 'image_2/'
-    target_path_rgb = target_path + 'rgb/'
-    print('start')
-    print('ori img path :', ori_path_rgb)
-    print('target img path :', target_path_rgb)
+def get_rad(theta, phi, gamma):
+    return (deg_to_rad(theta),
+            deg_to_rad(phi),
+            deg_to_rad(gamma))
 
-    img_list = os.listdir(target_path)
+def get_deg(rtheta, rphi, rgamma):
+    return (rad_to_deg(rtheta),
+            rad_to_deg(rphi),
+            rad_to_deg(rgamma))
+
+def deg_to_rad(deg):
+    return deg * math.pi / 180.0
+
+def rad_to_deg(rad):
+    return rad * 180.0 / math.pi
+
+def rotation3D(theta, phi, gamma):
+    rtheta, rphi, rgamma = get_rad(theta, phi, gamma)
+
+    RX = np.array([ [1, 0, 0, 0],
+                        [0, np.cos(rtheta), -np.sin(rtheta), 0],
+                        [0, -np.sin(rtheta), np.cos(rtheta), 0],
+                        [0, 0, 0, 1]])
+        
+    RY = np.array([ [np.cos(rphi), 0, -np.sin(rphi), 0],
+                        [0, 1, 0, 0],
+                        [np.sin(rphi), 0, np.cos(rphi), 0],
+                        [0, 0, 0, 1]])
+    RZ = np.array([ [np.cos(rgamma), -np.sin(rgamma), 0, 0],
+                        [np.sin(rgamma), np.cos(rgamma), 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
+
+    R = np.dot(np.dot(RX, RY), RZ)
+
+    return R
+
+def genImage(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
+    target_path_ = target_path + 'image_2/'
+    save_path_rgb = save_path + 'rgb/'
+    print('start')
+    print('target_path_ path :', target_path_)
+    print('save_path_rgb img path :', save_path_rgb)
+
+    img_list = os.listdir(target_path_)
     for img in img_list:
-        img = ori_path_rgb + img
-        target_img = target_path_rgb + img[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png"
-        shutil.copyfile(img, target_img)
+        path_img = target_path_ + img
+        target_img = save_path_rgb + img[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png"
+        shutil.copyfile(path_img, target_img)
 
     print('complete image')
     return None
 
 def genCalib(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
     ori_path_calib = target_path + 'calib/'
-    target_path_calib = save_path + 'calibration/'
+    save_path_calib = save_path + 'calibration/'
 
     print('start')
     print('ori calib path :', ori_path_calib)
-    print('target calib path :', target_path_calib)
+    print('save_path_calib path :', save_path_calib)
 
     calib_list = os.listdir(ori_path_calib)
 
@@ -49,7 +87,7 @@ def genCalib(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
 
         line_1 = str(new_calib[0][0])
 
-        with open(target_path_calib + calib[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
+        with open(save_path_calib + calib[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
         #print(save_calib_dir + one)
             file.writelines(line_1)
     
@@ -95,8 +133,8 @@ def genPose(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
         cam_mat = torch.eye(3)
         cam_mat[0, 0] = focal_length
         cam_mat[1, 1] = focal_length
-        cam_mat[0, 2] = w/2
-        cam_mat[1, 2] = h/2
+        cam_mat[0, 2] = ori_shape[1]/2
+        cam_mat[1, 2] = ori_shape[0]/2
         cam_mat = cam_mat.numpy()
         R_T = np.matmul(np.linalg.inv(cam_mat), P2_elements)
 
@@ -128,7 +166,7 @@ ori_path = '~/datasets/original/training/'
 target_path = '~/datasets/original_gen/training/'
 save_path = '~datasets/kitti_pose/train/'
 
-rotImage(ori_path, target_path, save_path, 0, 0, 0)
+genImage(ori_path, target_path, save_path, 0, 0, 0)
 genCalib(ori_path, target_path, save_path, 0, 0, 0)
 genPose(ori_path, target_path, save_path, 0, 0, 0)
 
@@ -141,7 +179,7 @@ ori_path = '~/datasets/original/training/'
 target_path = '~/datasets/rotz_calib/rotz_calib/rotation' + str(deg_z) + '/fixed' + str(deg_z) + '/training/'
 save_path = '~datasets/kitti_pose/train/'
 
-rotImage(ori_path, target_path, save_path, 0, 0, deg_z)
+genImage(ori_path, target_path, save_path, 0, 0, deg_z)
 genCalib(ori_path, target_path, save_path, 0, 0, deg_z)
 genPose(ori_path, target_path, save_path, 0, 0, deg_z)
 
