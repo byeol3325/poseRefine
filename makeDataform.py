@@ -8,14 +8,14 @@ from torch.utils import data
 
 import random
 
-def genImage(ori_path, target_path, theta=0, phi=0, gamma=0):
+def genImage(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
     ori_path_rgb = ori_path + 'image_2/'
     target_path_rgb = target_path + 'rgb/'
     print('start')
     print('ori img path :', ori_path_rgb)
     print('target img path :', target_path_rgb)
 
-    img_list = os.listdir(ori_path_rgb)
+    img_list = os.listdir(target_path)
     for img in img_list:
         img = ori_path_rgb + img
         target_img = target_path_rgb + img[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png"
@@ -24,9 +24,9 @@ def genImage(ori_path, target_path, theta=0, phi=0, gamma=0):
     print('complete image')
     return None
 
-def genCalib(ori_path, target_path, theta=0, phi=0, gamma=0):
-    ori_path_calib = ori_path + 'calib/'
-    target_path_calib = target_path + 'calibration/'
+def genCalib(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
+    ori_path_calib = target_path + 'calib/'
+    target_path_calib = save_path + 'calibration/'
 
     print('start')
     print('ori calib path :', ori_path_calib)
@@ -56,11 +56,11 @@ def genCalib(ori_path, target_path, theta=0, phi=0, gamma=0):
     print('comple calib fin')
     return None 
 
-def genPose(ori_path, target_path, theta=0, phi=0, gamma=0):
-    ori_path_img = ori_path + 'image_2/'
-    ori_path_calib = ori_path + 'calib/'
-    target_path_img = target_path + 'rgb/'
-    target_path_pose = target_path + 'poses/'
+def genPose(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
+    ori_path_img = target_path + 'image_2/'
+    ori_path_calib = target_path + 'calib/'
+    target_path_img = save_path + 'rgb/'
+    target_path_pose = save_path + 'poses/'
 
     print('start')
     print('ori calib path :', ori_path_calib)
@@ -122,12 +122,41 @@ def genPose(ori_path, target_path, theta=0, phi=0, gamma=0):
 ########################################################
 ##                     example                        ##
 ########################################################
+# original gen
 """
-ori_path = '/data0/data/KITTI/kitti/3Dobject/testing/'
-save_path = '/data0/moon/dsacstar/datasets/kitti/test/'
+ori_path = '~/datasets/original/training/'
+target_path = '~/datasets/original_gen/training/'
+save_path = '~datasets/kitti_pose/train/'
 
-rotImage(ori_path, save_path, 0, 0, 0.5)
-genCalib(ori_path, save_path, 0, 0, 0.5)
-genPose(ori_path, save_path, 0, 0, 0.5)
+rotImage(ori_path, target_path, save_path, 0, 0, 0)
+genCalib(ori_path, target_path, save_path, 0, 0, 0)
+genPose(ori_path, target_path, save_path, 0, 0, 0)
+
+"""
+
+# rotation z
+"""
+deg_z = 0.1
+ori_path = '~/datasets/original/training/'
+target_path = '~/datasets/rotz_calib/rotz_calib/rotation' + str(deg_z) + '/fixed' + str(deg_z) + '/training/'
+save_path = '~datasets/kitti_pose/train/'
+
+rotImage(ori_path, target_path, save_path, 0, 0, deg_z)
+genCalib(ori_path, target_path, save_path, 0, 0, deg_z)
+genPose(ori_path, target_path, save_path, 0, 0, deg_z)
+
+"""
+
+
+# rotation x (tilt) ***** NOT YET
+"""
+deg_x = 1
+ori_path = '~/datasets/original/training/'
+target_path = '~/datasets/rotz_calib/rotz_calib/rotation' + str(deg_z) + '/fixed' + str(deg_z) + '/training/'
+save_path = '~datasets/kitti_pose/train/'
+
+rotImage(ori_path, save_path, deg_x, 0, 0)
+genCalib(ori_path, save_path, deg_x, 0, 0)
+genPose(ori_path, save_path, deg_x, 0, 0)
 """
 
