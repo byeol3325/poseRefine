@@ -18,6 +18,7 @@ conda install pytorch==1.1.0 torchvision==0.3.0 cudatoolkit=9.0 -c pytorch
 and other  requirements:
 ```bash
 pip install -r requirements.txt
+```
 
 ### Data Prepartaion
 use makeDataform.py and kitti dataset to prepare dataset
