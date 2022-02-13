@@ -1,3 +1,6 @@
+### only can change gamma(Z)
+
+
 kitti_path = '/data0/data/KITTI/monodepth/kitti_raw/2011_09_26/2011_09_26_drive_0001_sync/image_02/'
 save_path = '/data0/moon/dsacstar/datasets/kitti_raw/train/'
 
