@@ -1,3 +1,7 @@
+### only change gamma(Z)
+### i will update theta(X)
+
+
 import os
 import math
 import cv2
