@@ -1,200 +1,177 @@
-import shutil
 import os
-import torch
-import numpy as np
-import cv2
 import math
+import cv2
+import numpy as np
+import imutils
 
-from torch.utils import data
 
-import random
+def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
+    if (train == False):
+        ori_path += 'testing/'
+        new_path += 'testing/'
+    else:
+        ori_path += 'training/'
+        new_path += 'training/'
+    
+    #ori_image_pathR = ori_path + 'image_3/'
+    #new_image_pathR = new_path + 'image_3/'
 
-def get_rad(theta, phi, gamma):
-    return (deg_to_rad(theta),
-            deg_to_rad(phi),
-            deg_to_rad(gamma))
+    ori_image_pathL = ori_path + 'image_2/'
+    #new_image_pathL = new_path + 'image_2/'
+    if os.path.isdir(new_path) == False:
+        os.mkdir(new_path)
 
-def get_deg(rtheta, rphi, rgamma):
-    return (rad_to_deg(rtheta),
-            rad_to_deg(rphi),
-            rad_to_deg(rgamma))
+    print(new_path, ' start.')
 
-def deg_to_rad(deg):
-    return deg * math.pi / 180.0
+    original_calib = ori_path + 'calib/'
+    
+    file_list = os.listdir(ori_image_pathL)
+    file_list_py = [file for file in file_list if file.endswith('.png')]
+    
+    new_path_img = new_path + 'rgb/'
+    new_path_poses = new_path + 'poses/'
+    new_path_calibration = new_path + 'calibration/'
 
-def rad_to_deg(rad):
-    return rad * 180.0 / math.pi
-
-def rotation3D(theta, phi, gamma):
-    rtheta, rphi, rgamma = get_rad(theta, phi, gamma)
-
-    RX = np.array([ [1, 0, 0, 0],
-                        [0, np.cos(rtheta), -np.sin(rtheta), 0],
-                        [0, -np.sin(rtheta), np.cos(rtheta), 0],
-                        [0, 0, 0, 1]])
+    for file_name in file_list_py:
+        #new_path_one = new_path + file_name[:-4] + '/'
+        #print("CHECK PATH :", new_path_one)
         
-    RY = np.array([ [np.cos(rphi), 0, -np.sin(rphi), 0],
-                        [0, 1, 0, 0],
-                        [np.sin(rphi), 0, np.cos(rphi), 0],
-                        [0, 0, 0, 1]])
-    RZ = np.array([ [np.cos(rgamma), -np.sin(rgamma), 0, 0],
-                        [np.sin(rgamma), np.cos(rgamma), 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]])
+        #if os.path.isdir(new_path_one) == False:
+        #    os.mkdir(new_path_one)
 
-    R = np.dot(np.dot(RX, RY), RZ)
+        imgL = cv2.imread(ori_image_pathL + file_name)
+        #imgR = cv2.imread(ori_image_pathR + file_name)
 
-    return R
+        rotate_bound = imutils.rotate_bound(imgL, gamma)
+        r_h, r_w, _ = rotate_bound.shape
+        h, w, _ = imgL.shape
+        pi_angle = math.pi/180*gamma
+        ratio = h * math.sqrt(1 + math.tan(pi_angle)**2) / 2 / (h+w*math.tan(pi_angle))
+        new_h = h*ratio
+        new_w = w*ratio
+        cropped_imgL = rotate_bound[int(-new_h + r_h/2):int(new_h + r_h/2), int(-new_w + r_w/2):int(new_w + r_w/2), :]
+        #cv2.imwrite(new_image_path + file_name, cropped_img)
+        c_h, c_w, _ = cropped_imgL.shape
+        fixed_imgL = cropped_imgL[int(c_h/2-122):int(c_h/2+122),int(c_w/2-402):int(c_w/2+402),:]
+        cv2.imwrite(new_path_img + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png", fixed_imgL)
 
-def genImage(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
-    target_path_ = target_path + 'image_2/'
-    save_path_rgb = save_path + 'rgb/'
-    print('start')
-    print('target_path_ path :', target_path_)
-    print('save_path_rgb img path :', save_path_rgb)
-
-    img_list = os.listdir(target_path_)
-    for img in img_list:
-        path_img = target_path_ + img
-        target_img = save_path_rgb + img[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png"
-        shutil.copyfile(path_img, target_img)
-
-    print('complete image')
-    return None
-
-def genCalib(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
-    ori_path_calib = target_path + 'calib/'
-    save_path_calib = save_path + 'calibration/'
-
-    print('start')
-    print('ori calib path :', ori_path_calib)
-    print('save_path_calib path :', save_path_calib)
-
-    calib_list = os.listdir(ori_path_calib)
-
-    for calib in calib_list:
-        calib_one = open(ori_path_calib + calib)
+        #print(size_image_path + file_name)
+        #cv2.imwrite(new_path_one + '0000.png', fixed_imgL)
+        #print(new_image_path + file_name)
+        #print(size_image_path + file_name)
+        """
+        rotate_bound = imutils.rotate_bound(imgR, angle)
+        r_h, r_w, _ = rotate_bound.shape
+        h, w, _ = imgR.shape
+        pi_angle = math.pi/180*angle
+        ratio = h * math.sqrt(1 + math.tan(pi_angle)**2) / 2 / (h+w*math.tan(pi_angle))
+        new_h = h*ratio
+        new_w = w*ratio
+        cropped_imgR = rotate_bound[int(-new_h + r_h/2):int(new_h + r_h/2), int(-new_w + r_w/2):int(new_w + r_w/2), :]
+        #cv2.imwrite(new_image_path + file_name, cropped_img)
+        c_h, c_w, _ = cropped_imgR.shape
+        fixed_imgR = cropped_imgR[int(c_h/2-122):int(c_h/2+122),int(c_w/2-402):int(c_w/2+402),:]
+        #print(size_image_path + file_name)
+        cv2.imwrite(new_path_one + '0001.png', fixed_imgR)
+        """
+        calib_one = open(original_calib + file_name[:-4] + '.txt')
         lines = calib_one.readlines()
 
+        pi_angle = math.pi/180*gamma
+        s = math.sin(pi_angle)
+        c = math.cos(pi_angle)
+        rotz = np.array([ [c, -s, 0], [s, c, 0], [0, 0, 1] ])
+
         P2 = lines[2].split()
+        new_P2 = P2
         P2_elements = np.array ([ [float(P2[1]), float(P2[2]), float(P2[3]), float(P2[4])],
                         [float(P2[5]), float(P2[6]), float(P2[7]), float(P2[8])],
                         [float(P2[9]), float(P2[10]), float(P2[11]), float(P2[12])] ])
         
-        rot3D = rotation3D(theta, phi, gamma)
+        c_u = P2_elements[0,2]
+        c_v = P2_elements[1,2]
+        f_u = P2_elements[0,0]
+        f_v = P2_elements[1,1]
+        b_x = P2_elements[0,3]/f_u
+        b_y = P2_elements[1,3]/f_v
+        b_z = P2_elements[2,3]
 
-        new_calib = np.matmul(rot3D[:3,:3], P2_elements)
+        K = np.array([ [f_u, 0, c_u], 
+              [0, f_v, c_v], 
+              [0, 0, 1]
+             ])
 
-        line_1 = str(new_calib[0][0])
+        ori_shapeL = imgL.shape
+        cropped_shapeL = cropped_imgL.shape
+        new_shapeL = fixed_imgL.shape
 
-        with open(save_path_calib + calib[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
-        #print(save_calib_dir + one)
-            file.writelines(line_1)
-    
-    print('comple calib fin')
-    return None 
+        u = ori_shapeL[1]/2 - c_u
+        v = ori_shapeL[0]/2 - c_v
+        new_c_u = cropped_shapeL[1]/2 - u
+        new_c_v = cropped_shapeL[0]/2 - v
 
-def genPose(ori_path, target_path, save_path, theta=0, phi=0, gamma=0):
-    ori_path_img = target_path + 'image_2/'
-    ori_path_calib = target_path + 'calib/'
-    target_path_img = save_path + 'rgb/'
-    target_path_pose = save_path + 'poses/'
+        K = np.array([ [f_u, 0, new_c_u], 
+                     [0, f_v, new_c_v], 
+                     [0, 0, 1]
+                    ])
 
-    print('start')
-    print('ori calib path :', ori_path_calib)
-    print('target pose path :', target_path_pose)
+        R = np.eye(3)
+        T = np.array([[b_x], [b_y], [b_z]])
+        rotationR = np.matmul(rotz, R)
+        newRTL = np.concatenate((rotationR, T), axis=1)
+        # P2_elements = np.matmul(K, newRT)
 
-    img_list = os.listdir(ori_path_img)
-
-    for img_file in img_list:
-        ori_file_name = img_file[:-4]
-        target_file_name = img_file[:-4] + str(theta) + "_" + str(phi) + "_" + str(gamma)
-
-        ori_img = cv2.imread(ori_path_img + ori_file_name + ".png")
-        target_img = cv2.imread(target_path_img + target_file_name + ".png")
-
-        ori_calib = open(ori_path_calib + ori_file_name + ".txt", 'r')
-        lines = ori_calib.readlines()
-        P2 = lines[2].split()
-        P2_elements = np.array ([ [float(P2[1]), float(P2[2]), float(P2[3]), float(P2[4])],
-                        [float(P2[5]), float(P2[6]), float(P2[7]), float(P2[8])],
-                        [float(P2[9]), float(P2[10]), float(P2[11]), float(P2[12])] ])
-
-        ori_shape = ori_img.shape
-        target_shape = target_img.shape
-
-        c_h = ori_shape[0] - target_shape[0]
-        c_w = ori_shape[1] - target_shape[1]
-        P2_elements[0,2] = P2_elements[0,2] - c_w/2
-        P2_elements[1,2] = P2_elements[1,2] - (c_h/2)
-
-        focal_length = float(P2[1])
-
-        cam_mat = torch.eye(3)
-        cam_mat[0, 0] = focal_length
-        cam_mat[1, 1] = focal_length
-        cam_mat[0, 2] = ori_shape[1]/2
-        cam_mat[1, 2] = ori_shape[0]/2
-        cam_mat = cam_mat.numpy()
-        R_T = np.matmul(np.linalg.inv(cam_mat), P2_elements)
-
-        rot3D = rotation3D(theta, phi, gamma)
-
-        R_T = np.matmul(rot3D[:3,:3], R_T)
-    
-        n = 4
-        m = 4
+        c_h = cropped_shapeL[0] - new_shapeL[0]
+        c_w = cropped_shapeL[1] - new_shapeL[1]
+        K[0,2] = K[0,2] - c_w/2
+        K[1,2] = K[1,2] - c_h/2
         
-        RT_all = [' '.join(str(x) for x in R_T[i,:]) for i in range(3)]
-        RT_all.append('0 0 0 1')
+        focal = P2[1]
         
-        with open(target_path_pose + target_file_name + ".txt", 'w') as file:
+        with open(new_path_calibration + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
+            file.writelines(focal)
+        """
+        P3 = lines[3].split()
+        new_P3 = P3
+        P3_elements = np.array ([ [float(P3[1]), float(P3[2]), float(P3[3]), float(P3[4])],
+                        [float(P3[5]), float(P3[6]), float(P3[7]), float(P3[8])],
+                        [float(P3[9]), float(P3[10]), float(P3[11]), float(P3[12])] ])
+
+        c_u = P3_elements[0,2]
+        c_v = P3_elements[1,2]
+        f_u = P3_elements[0,0]
+        f_v = P3_elements[1,1]
+        b_x = P3_elements[0,3]/f_u
+        b_y = P3_elements[1,3]/f_v
+        b_z = P3_elements[2,3]
+
+        R = np.eye(3)
+        T = np.array([[b_x], [b_y], [b_z]])
+        rotationR = np.matmul(rotz, R)
+        newRTR = np.concatenate((rotationR, T), axis=1)
+
+        poses = [str(newRTL[0,0]) + " " + str(newRTL[0,1]) + " " + str(newRTL[0,2]) + " " + str(newRTL[0,3]) + " " +
+               str(newRTL[1,0]) + " " + str(newRTL[1,1]) + " " + str(newRTL[1,2]) + " " + str(newRTL[1,3]) + " " +
+               str(newRTL[2,0]) + " " + str(newRTL[2,1]) + " " + str(newRTL[2,2]) + " " + str(newRTL[2,3]) + '\n',
+               str(newRTR[0,0]) + " " + str(newRTR[0,1]) + " " + str(newRTR[0,2]) + " " + str(newRTR[0,3]) + " " +
+               str(newRTR[1,0]) + " " + str(newRTR[1,1]) + " " + str(newRTR[1,2]) + " " + str(newRTR[1,3]) + " " +
+               str(newRTR[2,0]) + " " + str(newRTR[2,1]) + " " + str(newRTR[2,2]) + " " + str(newRTR[2,3])]
+        
+        with open(new_path_one + 'poses.txt', 'w') as file:
+            file.writelines(poses)
+        """
+        
+        poses = [' '.join(str(x) for x in newRTL[i,:]) for i in range(3)]
+        poses.append('0 0 0 1')
+        with open(new_path_poses + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
             for i in range(4):
-                file.writelines(RT_all[i])
+                file.writelines(poses[i])
                 file.writelines('\n')
-        
-    print('comple pose fin')
+
+    print(gamma, ' angle image is fin')
+
     return None
 
-
-########################################################
-##                     example                        ##
-########################################################
-# original gen
-"""
-ori_path = '~/datasets/original/training/'
-target_path = '~/datasets/original_gen/training/'
-save_path = '~datasets/kitti_pose/train/'
-
-genImage(ori_path, target_path, save_path, 0, 0, 0)
-genCalib(ori_path, target_path, save_path, 0, 0, 0)
-genPose(ori_path, target_path, save_path, 0, 0, 0)
-
-"""
-
-# rotation z
-"""
-deg_z = 0.1
-ori_path = '~/datasets/original/training/'
-target_path = '~/datasets/rotz_calib/rotz_calib/rotation' + str(deg_z) + '/fixed' + str(deg_z) + '/training/'
-save_path = '~datasets/kitti_pose/train/'
-
-genImage(ori_path, target_path, save_path, 0, 0, deg_z)
-genCalib(ori_path, target_path, save_path, 0, 0, deg_z)
-genPose(ori_path, target_path, save_path, 0, 0, deg_z)
-
-"""
-
-
-# rotation x (tilt) ***** NOT YET
-"""
-deg_x = 1
-ori_path = '~/datasets/original/training/'
-target_path = '~/datasets/rotz_calib/rotz_calib/rotation' + str(deg_z) + '/fixed' + str(deg_z) + '/training/'
-save_path = '~datasets/kitti_pose/train/'
-
-rotImage(ori_path, save_path, deg_x, 0, 0)
-genCalib(ori_path, save_path, deg_x, 0, 0)
-genPose(ori_path, save_path, deg_x, 0, 0)
-"""
-
+ori_path = '/home/cv1/hdd/monodle/data/KITTI/object/'
+new_path = '/home/cv1/hdd/monodle/own_data_seq/kitti/'
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=1)
