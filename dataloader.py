@@ -1,3 +1,5 @@
+### for poses dataloader
+
 import os
 import numpy as np
 import random
@@ -277,3 +279,11 @@ class CamLocDataset(Dataset):
 			coords[:,:sc.shape[1],:sc.shape[2]] = sc
 
 		return image, pose, coords, focal_length, self.rgb_files[idx], idx, direction
+	
+	
+"""
+trainset = CamLocDataset("./datasets/" + opt.scene + "/train", mode=opt.mode, sparse=opt.sparse, augment=True)
+trainset_loader = torch.utils.data.DataLoader(trainset, shuffle=True, num_workers=6)
+
+for image, gt_pose, gt_coords, focal_length, file, index, direction in trainset_loader:
+"""
