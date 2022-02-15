@@ -286,12 +286,13 @@ cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0)
 #cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-3)
 
 #### change gamma
-#### |new_path/
-####   |image_2/                 # RGB Image
-####   |label_2/                 # 2D, 3D labels for 3DOD
-####   |calib/                   # K[R|T], projection matrix
-####   |rgb/                     # RGB Image
-####   |poses/                   # R|T, rotation & translation matrix
-####   |calibration/             # focal length
-####   |cam/                     # K, intrinsic matrix
+#### |~temp/
+####    |training/
+####      |image_2/                 # RGB Image
+####      |label_2/                 # 2D, 3D labels for 3DOD
+####      |calib/                   # K[R|T], projection matrix
+####      |rgb/                     # RGB Image
+####      |poses/                   # R|T, rotation & translation matrix
+####      |calibration/             # focal length
+####      |cam/                     # K, intrinsic matrix
 
