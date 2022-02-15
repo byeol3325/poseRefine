@@ -28,12 +28,10 @@ use makeDataform.py and kitti dataset to prepare dataset
   |kitti/
     |train/
       |calibration/
-      |depth/
       |poses/
       |rgb/
     |test/
       |calibration/
-      |depth/
       |poses/
       |rgb/
 ```
