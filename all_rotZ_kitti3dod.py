@@ -118,12 +118,12 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
         new_c_u = cropped_shapeL[1]/2 - u
         new_c_v = cropped_shapeL[0]/2 - v
 
-        print(K)
+        #print(K)
         K = np.array([ [f_u, 0, new_c_u], 
                      [0, f_v, new_c_v], 
                      [0, 0, 1]
                     ])
-        print(K)
+        #print(K)
         R = np.eye(3)
         T = np.array([[b_x], [b_y], [b_z]])
         rotationR = np.matmul(rotz, R)
@@ -134,7 +134,7 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
         c_w = cropped_shapeL[1] - new_shapeL[1]
         K[0,2] = K[0,2] - c_w/2
         K[1,2] = K[1,2] - c_h/2
-        print(K)
+        #print(K)
         focal = P2[1]
         
         with open(new_path_calibration + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
@@ -275,18 +275,18 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
 
     return None
 
-ori_path = '/data0/data/KITTI/3Dobject_one/'
-new_path = '/data0/data/KITTI/3Dobject_one/temp/'
+ori_path = '/data0/data/KITTI/3Dobject/'
+new_path = '/data0/data/KITTI/forTEST/kitti3dod_pose/'
 cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0)
-#cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=1)
-#cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=2)
-#cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=3)
-#cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-1)
-#cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-2)
-#cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-3)
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=1)
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=2)
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=3)
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-1)
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-2)
+cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-3)
 
 #### change gamma
-#### |~temp/
+#### |~kitti3dod_pose/
 ####    |training/
 ####      |image_2/                 # RGB Image
 ####      |label_2/                 # 2D, 3D labels for 3DOD
@@ -295,4 +295,3 @@ cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0)
 ####      |poses/                   # R|T, rotation & translation matrix
 ####      |calibration/             # focal length
 ####      |cam/                     # K, intrinsic matrix
-
