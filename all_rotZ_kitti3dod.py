@@ -1,13 +1,30 @@
-### only change gamma(Z)
-### i will update theta(X)
-
-
 import os
 import math
 import cv2
 import numpy as np
 import imutils
 
+def Rx(theta):
+    return np.matrix([[ 1, 0           , 0           ],
+                   [ 0, math.cos(theta),-math.sin(theta)],
+                   [ 0, math.sin(theta), math.cos(theta)]])
+  
+def Ry(theta):
+    return np.matrix([[ math.cos(theta), 0, math.sin(theta)],
+                   [ 0           , 1, 0           ],
+                   [-math.sin(theta), 0, math.cos(theta)]])
+  
+def Rz(theta):
+    return np.matrix([[ math.cos(theta), -math.sin(theta), 0 ],
+                   [ math.sin(theta), math.cos(theta) , 0 ],
+                   [ 0           , 0            , 1 ]])
+
+def rot3Dto2D(matrix_3D, pts_2D):
+    nPts_2D = np.array([0, 0])
+    #print(pts_2D)
+    nPts_2D[0] = (pts_2D[0]*matrix_3D[0,0] + pts_2D[1]*matrix_3D[0,1] + 1*matrix_3D[0,2])/(pts_2D[0]*matrix_3D[2,0] + pts_2D[1]*matrix_3D[2,1] + 1*matrix_3D[2,2])
+    nPts_2D[1] = (pts_2D[0]*matrix_3D[1,0] + pts_2D[1]*matrix_3D[1,1] + 1*matrix_3D[1,2])/(pts_2D[0]*matrix_3D[2,0] + pts_2D[1]*matrix_3D[2,1] + 1*matrix_3D[2,2])
+    return nPts_2D
 
 def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
     if (train == False):
@@ -18,8 +35,12 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
         new_path += 'training/'
     
     #ori_image_pathR = ori_path + 'image_3/'
-    #new_image_pathR = new_path + 'image_3/'
-
+    #new_image_pathR = new_path + 'image_3/''
+    deg_to_theta = theta * math.pi/180
+    deg_to_phi = phi * math.pi/180
+    deg_to_gamma = gamma * math.pi/180
+    rot_mat = Rz(-deg_to_gamma)*Ry(-deg_to_theta)*Rx(-deg_to_phi)
+    
     ori_image_pathL = ori_path + 'image_2/'
     #new_image_pathL = new_path + 'image_2/'
     if os.path.isdir(new_path) == False:
@@ -55,15 +76,15 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
 
         rotate_bound = imutils.rotate_bound(imgL, gamma)
         r_h, r_w, _ = rotate_bound.shape
-        h, w, _ = imgL.shape
-        pi_angle = math.pi/180*gamma
-        ratio = h * math.sqrt(1 + math.tan(pi_angle)**2) / 2 / (h+w*math.tan(pi_angle))
-        new_h = h*ratio
-        new_w = w*ratio
-        cropped_imgL = rotate_bound[int(-new_h + r_h/2):int(new_h + r_h/2), int(-new_w + r_w/2):int(new_w + r_w/2), :]
+        #h, w, _ = imgL.shape
+        #pi_angle = math.pi/180*gamma
+        #ratio = h * math.sqrt(1 + math.tan(pi_angle)**2) / 2 / (h+w*math.tan(pi_angle))
+        #new_h = h*ratio
+        #new_w = w*ratio
+        #cropped_imgL = rotate_bound[int(-new_h + r_h/2):int(new_h + r_h/2), int(-new_w + r_w/2):int(new_w + r_w/2), :]
         #cv2.imwrite(new_image_path + file_name, cropped_img)
-        c_h, c_w, _ = cropped_imgL.shape
-        fixed_imgL = cropped_imgL[int(c_h/2-122):int(c_h/2+122),int(c_w/2-402):int(c_w/2+402),:]
+        #c_h, c_w, _ = cropped_imgL.shape
+        fixed_imgL = rotate_bound[int(r_h/2-122):int(r_h/2+122),int(r_w/2-402):int(r_w/2+402),:]
         cv2.imwrite(new_path_img + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png", fixed_imgL)
         cv2.imwrite(new_path_image + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png", fixed_imgL)
         countI = countI + 1
@@ -112,32 +133,33 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
               [0, f_v, c_v], 
               [0, 0, 1]
              ])
-
+        
         ori_shapeL = imgL.shape
-        cropped_shapeL = cropped_imgL.shape
+        #cropped_shapeL = cropped_imgL.shape
         new_shapeL = fixed_imgL.shape
 
         u = ori_shapeL[1]/2 - c_u
         v = ori_shapeL[0]/2 - c_v
-        new_c_u = cropped_shapeL[1]/2 - u
-        new_c_v = cropped_shapeL[0]/2 - v
-
+        #new_c_u = cropped_shapeL[1]/2 - u
+        #new_c_v = cropped_shapeL[0]/2 - v
+        new_c_u = new_shapeL[1]/2 - u
+        new_c_v = new_shapeL[0]/2 - v
         #print(K)
         K = np.array([ [f_u, 0, new_c_u], 
                      [0, f_v, new_c_v], 
                      [0, 0, 1]
                     ])
-        #print(K)
+        # print(K)
         R = np.eye(3)
         T = np.array([[b_x], [b_y], [b_z]])
         rotationR = np.matmul(rotz, R)
         newRTL = np.concatenate((rotationR, T), axis=1)
         # P2_elements = np.matmul(K, newRT)
 
-        c_h = cropped_shapeL[0] - new_shapeL[0]
-        c_w = cropped_shapeL[1] - new_shapeL[1]
-        K[0,2] = K[0,2] - c_w/2
-        K[1,2] = K[1,2] - c_h/2
+        #c_h = cropped_shapeL[0] - new_shapeL[0]
+        #c_w = cropped_shapeL[1] - new_shapeL[1]
+        #K[0,2] = K[0,2] - c_w/2
+        #K[1,2] = K[1,2] - c_h/2
         #print(K)
         focal = P2[1]
         
