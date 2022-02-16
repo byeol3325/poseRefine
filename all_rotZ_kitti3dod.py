@@ -25,7 +25,7 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
     if os.path.isdir(new_path) == False:
         os.mkdir(new_path)
 
-    print(new_path, ' start.')
+    print(new_path + str(gamma), ' start.')
 
     original_calib = ori_path + 'calib/'
     original_label = ori_path + 'label_2/'
@@ -39,7 +39,10 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
     new_path_label = new_path + 'label_2/'
     new_path_calib = new_path + 'calib/'
     new_path_cam = new_path + 'cam/'
+    new_path_image = new_path + 'image_2/'
 
+    countI = 0
+    countP = 0
     for file_name in file_list_py:
         #new_path_one = new_path + file_name[:-4] + '/'
         #print("CHECK PATH :", new_path_one)
@@ -62,7 +65,8 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
         c_h, c_w, _ = cropped_imgL.shape
         fixed_imgL = cropped_imgL[int(c_h/2-122):int(c_h/2+122),int(c_w/2-402):int(c_w/2+402),:]
         cv2.imwrite(new_path_img + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png", fixed_imgL)
-
+        cv2.imwrite(new_path_image + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".png", fixed_imgL)
+        countI = countI + 1
         #print(size_image_path + file_name)
         #cv2.imwrite(new_path_one + '0000.png', fixed_imgL)
         #print(new_image_path + file_name)
@@ -158,42 +162,13 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
             file.writelines('\n')
             file.writelines(lines[3:])
         
-
-        """
-        P3 = lines[3].split()
-        new_P3 = P3
-        P3_elements = np.array ([ [float(P3[1]), float(P3[2]), float(P3[3]), float(P3[4])],
-                        [float(P3[5]), float(P3[6]), float(P3[7]), float(P3[8])],
-                        [float(P3[9]), float(P3[10]), float(P3[11]), float(P3[12])] ])
-        c_u = P3_elements[0,2]
-        c_v = P3_elements[1,2]
-        f_u = P3_elements[0,0]
-        f_v = P3_elements[1,1]
-        b_x = P3_elements[0,3]/f_u
-        b_y = P3_elements[1,3]/f_v
-        b_z = P3_elements[2,3]
-        R = np.eye(3)
-        T = np.array([[b_x], [b_y], [b_z]])
-        rotationR = np.matmul(rotz, R)
-        newRTR = np.concatenate((rotationR, T), axis=1)
-        poses = [str(newRTL[0,0]) + " " + str(newRTL[0,1]) + " " + str(newRTL[0,2]) + " " + str(newRTL[0,3]) + " " +
-               str(newRTL[1,0]) + " " + str(newRTL[1,1]) + " " + str(newRTL[1,2]) + " " + str(newRTL[1,3]) + " " +
-               str(newRTL[2,0]) + " " + str(newRTL[2,1]) + " " + str(newRTL[2,2]) + " " + str(newRTL[2,3]) + '\n',
-               str(newRTR[0,0]) + " " + str(newRTR[0,1]) + " " + str(newRTR[0,2]) + " " + str(newRTR[0,3]) + " " +
-               str(newRTR[1,0]) + " " + str(newRTR[1,1]) + " " + str(newRTR[1,2]) + " " + str(newRTR[1,3]) + " " +
-               str(newRTR[2,0]) + " " + str(newRTR[2,1]) + " " + str(newRTR[2,2]) + " " + str(newRTR[2,3])]
-        
-        with open(new_path_one + 'poses.txt', 'w') as file:
-            file.writelines(poses)
-        """
-        
         poses = [' '.join(str(x) for x in newRTL[i,:]) for i in range(3)]
         poses.append('0 0 0 1')
         with open(new_path_poses + file_name[:-4] + "_" + str(theta) + "_" + str(phi) + "_" + str(gamma) + ".txt", 'w') as file:
             for i in range(4):
                 file.writelines(poses[i])
                 file.writelines('\n')
-
+        countP = countP + 1
         label_one = open(original_label + file_name[:-4] + '.txt')
         label_lines = label_one.readlines()
         size_lines = label_lines
@@ -270,7 +245,7 @@ def cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=0):
                 file.writelines(size_lines[i])
                 file.writelines('\n')
             
-            
+    print(countI, countP)
     print(gamma, ' angle image is fin')
 
     return None
@@ -286,7 +261,7 @@ cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-2)
 cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-3)
 
 #### change gamma
-#### |~kitti3dod_pose/
+#### |~temp/
 ####    |training/
 ####      |image_2/                 # RGB Image
 ####      |label_2/                 # 2D, 3D labels for 3DOD
@@ -295,3 +270,39 @@ cropRotImage(ori_path, new_path, train=True, theta=0, phi=0, gamma=-3)
 ####      |poses/                   # R|T, rotation & translation matrix
 ####      |calibration/             # focal length
 ####      |cam/                     # K, intrinsic matrix
+
+new_path = '/data0/data/KITTI/forTEST/kitti3dod_pose/training/'
+
+new_path_img = new_path + 'rgb/'
+new_path_poses = new_path + 'poses/'
+new_path_calibration = new_path + 'calibration/'
+new_path_label = new_path + 'label_2/'
+new_path_calib = new_path + 'calib/'
+new_path_cam = new_path + 'cam/'
+new_path_image = new_path + 'image_2/'
+
+img = os.listdir(new_path_img)
+
+poses = os.listdir(new_path_poses)
+
+calibration = os.listdir(new_path_calibration)
+
+label = os.listdir(new_path_label)
+
+calib = os.listdir(new_path_calib)
+
+cam = os.listdir(new_path_cam)
+
+image = os.listdir(new_path_image)
+
+## must be same count
+print(len(img), len(poses), len(calibration), len(label), len(calib), len(cam), len(image))
+
+img_py = [file for file in img if file.endswith('.png')]
+poses_py = [file for file in img if file.endswith('.txt')]
+
+# check len(pose) == len(img)
+for file_name in poses_py:
+    name = file_name[:-4]
+    if os.path.isfile(new_path_img + name + ".png") == False:
+        print(name, " no rgb")
